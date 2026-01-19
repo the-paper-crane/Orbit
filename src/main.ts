@@ -1,85 +1,151 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import {App, Editor, MarkdownView, Modal, Notice, Plugin, Setting} from 'obsidian';
+import {DEFAULT_SETTINGS, OrbitSettings, OrbitSettingTab} from "./settings";
 
-// Remember to rename these classes and interfaces!
+export const ControlPanelType = 'control-panel'
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class OrbitPlugin extends Plugin {
+	settings: OrbitSettings;
 
+	//
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+		// 
+		this.addRibbonIcon('satellite', 'Orbit', () => {
+			// 
+			new Notice('');
 		});
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
+		// 
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+		statusBarItemEl.setText('');
 
-		// This adds a simple command that can be triggered anywhere
+		// 
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
+			id: '',
+			name: '',
 			callback: () => {
 				new SampleModal(this.app).open();
 			}
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
+
+		// 
 		this.addCommand({
 			id: 'open-modal-complex',
 			name: 'Open modal (complex)',
 			checkCallback: (checking: boolean) => {
-				// Conditions to check
+				// 
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
+					// 
+					// 
 					if (!checking) {
 						new SampleModal(this.app).open();
 					}
 
-					// This command will only show up in Command Palette when the check function returns true
+					// 
 					return true;
 				}
 				return false;
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
+		//
+		this.addCommand({
+			id: 'launch-satellite',
+			name: 'Launch Satellite',
+			callback: () => {
+				new LaunchSatelliteModal(this.app, (projectTitle) => {
+					this.createSatelliteNote(projectTitle);
+				}).open();
+			}
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		// 
+		this.addSettingTab(new OrbitSettingTab(this.app, this));
 
 	}
 
-	onunload() {
+	//
+	async createSatelliteNote(projectTitle: string) {
+		//
+		const fileName = `SAT-${projectTitle}.md`;
+		const today = new Date().toISOString().split('T')[0];
+		
+		//
+		const frontmatter = [
+			'---',
+			'type: satellite',
+			'satellite-id: SAT-001',
+			`project: ${projectTitle}`,
+			'status: active',
+			'constellation: ',
+			`launched: ${today}`,
+			'---',
+			''
+		].join('\n');
+		const content = `${frontmatter}`
+		
+		//
+		try {
+			await this.app.vault.create(fileName, content);
+			new Notice(`Launching SAT-${projectTitle}...`);
+		} catch(error) {
+			new Notice(`Satellite already in orbit. \n ${error}`);
+		}
 	}
 
+	//
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<OrbitSettings>);
 	}
 
+	//
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+}
+
+class LaunchSatelliteModal extends Modal {
+    result: string;
+    onSubmit: (result: string) => void;
+
+	// set up the modal
+    constructor(app: App, onSubmit: (result: string) => void) {
+        super(app);
+        this.onSubmit = onSubmit;
+    }
+
+	// build UI here
+    onOpen() {
+        const { contentEl } = this;
+        
+        contentEl.createEl("h2", { text: "Launch New Satellite" });
+
+        new Setting(contentEl)
+            .setName("Project Name")
+            .addText((text) =>
+                text.onChange((value) => {
+                    this.result = value;
+                })
+            );
+
+        new Setting(contentEl)
+            .addButton((btn) =>
+                btn
+                    .setButtonText("Launch")
+                    .setCta()
+                    .onClick(() => {
+                        this.close();
+                        this.onSubmit(this.result);
+                    })
+            );
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
 }
 
 class SampleModal extends Modal {
