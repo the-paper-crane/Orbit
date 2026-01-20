@@ -1,18 +1,18 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
-import MyPlugin from "./main";
+import OrbitPlugin from "./main";
 
-export interface MyPluginSettings {
-	mySetting: string;
+export interface OrbitSettings {
+	OrbitSetting: string;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+export const DEFAULT_SETTINGS: OrbitSettings = {
+	OrbitSetting: 'default'
 }
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class OrbitSettingTab extends PluginSettingTab {
+	plugin: OrbitPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: OrbitPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -27,9 +27,9 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setDesc('It\'s a secret')
 			.addText(text => text
 				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setValue(this.plugin.settings.OrbitSetting)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.OrbitSetting = value;
 					await this.plugin.saveSettings();
 				}));
 	}

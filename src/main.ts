@@ -1,4 +1,4 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin, Setting} from 'obsidian';
+import {App, Modal, Notice, Plugin, Setting} from 'obsidian';
 import {DEFAULT_SETTINGS, OrbitSettings, OrbitSettingTab} from "./settings";
 
 export const ControlPanelType = 'control-panel'
@@ -13,50 +13,20 @@ export default class OrbitPlugin extends Plugin {
 		// 
 		this.addRibbonIcon('satellite', 'Orbit', () => {
 			// 
-			new Notice('');
+			new Notice('Orbit');
 		});
 
 		// 
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('');
-
-		// 
-		this.addCommand({
-			id: '',
-			name: '',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-
-		// 
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// 
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// 
-					// 
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// 
-					return true;
-				}
-				return false;
-			}
-		});
+		statusBarItemEl.setText('Satellite');
 
 		//
 		this.addCommand({
 			id: 'launch-satellite',
-			name: 'Launch Satellite',
+			name: 'Launch satellite',
 			callback: () => {
 				new LaunchSatelliteModal(this.app, (projectTitle) => {
-					this.createSatelliteNote(projectTitle);
+					void this.createSatelliteNote(projectTitle);
 				}).open();
 			}
 		});
@@ -79,7 +49,7 @@ export default class OrbitPlugin extends Plugin {
 			'satellite-id: SAT-001',
 			`project: ${projectTitle}`,
 			'status: active',
-			'constellation: ',
+			'constellation:',
 			`launched: ${today}`,
 			'---',
 			''
@@ -91,7 +61,7 @@ export default class OrbitPlugin extends Plugin {
 			await this.app.vault.create(fileName, content);
 			new Notice(`Launching SAT-${projectTitle}...`);
 		} catch(error) {
-			new Notice(`Satellite already in orbit. \n ${error}`);
+			new Notice(`Satellite already in orbit. \n ${String(error)}`);
 		}
 	}
 
@@ -120,10 +90,10 @@ class LaunchSatelliteModal extends Modal {
     onOpen() {
         const { contentEl } = this;
         
-        contentEl.createEl("h2", { text: "Launch New Satellite" });
+        contentEl.createEl("h2", { text: "Launch new satellite" });
 
         new Setting(contentEl)
-            .setName("Project Name")
+            .setName("Project name")
             .addText((text) =>
                 text.onChange((value) => {
                     this.result = value;
@@ -146,20 +116,4 @@ class LaunchSatelliteModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
     }
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
 }
