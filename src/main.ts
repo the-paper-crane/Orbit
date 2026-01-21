@@ -1,7 +1,7 @@
-import {App, Modal, Notice, Plugin, Setting} from 'obsidian';
+import {App, ItemView, Modal, Notice, Plugin, Setting, WorkspaceLeaf} from 'obsidian';
 import {DEFAULT_SETTINGS, OrbitSettings, OrbitSettingTab} from "./settings";
 
-export const ControlPanelType = 'control-panel'
+const VIEW_TYPE_ORBIT_CONTROL = "orbit-control-panel";
 
 export default class OrbitPlugin extends Plugin {
 	settings: OrbitSettings;
@@ -10,6 +10,12 @@ export default class OrbitPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		//
+		this.registerView(
+			VIEW_TYPE_ORBIT_CONTROL,
+			(leaf) => new OrbitControlView(leaf)
+		);
+		
 		// 
 		this.addRibbonIcon('satellite', 'Orbit', () => {
 			// 
