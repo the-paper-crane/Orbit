@@ -36,6 +36,15 @@ export default class OrbitPlugin extends Plugin {
 				}).open();
 			}
 		});
+		
+		//
+		this.addCommand({
+			id: 'open-orbit-control',
+			name: 'Open control panel',
+			callback: () => {
+				void this.activateView();
+			}
+		});
 
 		// 
 		this.addSettingTab(new OrbitSettingTab(this.app, this));
@@ -68,6 +77,30 @@ export default class OrbitPlugin extends Plugin {
 			new Notice(`Launching SAT-${projectTitle}...`);
 		} catch(error) {
 			new Notice(`Satellite already in orbit. \n ${String(error)}`);
+		}
+	}
+
+	// open the control panel leaf
+	async activateView() {
+		const { workspace } = this.app;
+		// find the first instance of the control panel, if this exists
+		let leaf = workspace.getLeavesOfType(VIEW_TYPE_ORBIT_CONTROL)[0];
+		// otherwise, open to satellites
+		if (!leaf) {
+			// initialise in right sidebar
+			const rightLeaf = workspace.getRightLeaf(false);
+			if (rightLeaf) {
+				leaf = rightLeaf;
+				// create panel of type orbit control
+				await leaf.setViewState({
+					type: VIEW_TYPE_ORBIT_CONTROL,
+					active: true,
+				});
+			}
+		}
+		// switch to orbit control panel leaf
+		if (leaf) {
+			void workspace.revealLeaf(leaf);
 		}
 	}
 
