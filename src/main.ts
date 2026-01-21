@@ -156,3 +156,116 @@ class LaunchSatelliteModal extends Modal {
         contentEl.empty();
     }
 }
+
+class OrbitControlView extends ItemView {
+    constructor(leaf: WorkspaceLeaf) {
+        super(leaf);
+    }
+
+	//
+    getViewType() {
+        return VIEW_TYPE_ORBIT_CONTROL;
+    }
+
+	//
+    getDisplayText() {
+        return "Orbit";
+    }
+
+	//
+    getIcon() {
+        return "satellite";
+    }
+
+	//
+    async onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        
+        contentEl.createEl("h4", { text: "Satellite control panel" });
+        
+        // 
+        const satelliteList = contentEl.createEl("div", { cls: "orbit-satellite-list" });
+        await this.renderSatellites(satelliteList);
+    }
+
+	//
+    async onClose() {
+        // 
+    }
+
+	//
+    async renderSatellites(container: HTMLElement) {
+		container.empty();
+		
+		// 
+		const files = this.app.vault.getMarkdownFiles();
+		
+		const satellites = [];
+		
+		// 
+		for (const file of files) {
+			const cache = this.app.metadataCache.getFileCache(file);
+			
+			if (cache?.frontmatter && cache.frontmatter.type === 'satellite') {
+				satellites.push({
+					file: file,
+					frontmatter: cache.frontmatter
+				});
+			}
+		}
+		
+    
+		//
+		if (satellites.length === 0) {
+			container.createEl("p", { 
+				text: "Orbit is empty. Launch to start...",
+				cls: "orbit-empty-state"
+			});
+			return;
+		}
+		
+		const header = container.createEl("div", { 
+			text: `Active satellites: ${satellites.length}`,
+			cls: "orbit-header"
+		});
+		header.setCssStyles({ marginBottom: "12px" });
+		
+		// 
+		const list = container.createEl("div", { cls: "orbit-satellite-container" });
+		
+		for (const sat of satellites) {
+			const item = list.createEl("div", { cls: "tree-item-self is-clickable orbit-satellite-item" });
+			
+			const itemInner = item.createEl("div", { cls: "tree-item-inner" });
+			itemInner.createEl("span", { 
+				text: (sat.frontmatter.project as string) || "Unknown Mission",
+				cls: "tree-item-inner-text"
+			});
+			
+			const itemFlair = item.createEl("div", { cls: "tree-item-flair-outer" });
+			const statusIndicator = itemFlair.createEl("span", { cls: "orbit-status-indicator" });
+
+			//
+			const isActive = sat.frontmatter.status === 'active';
+			const svg = statusIndicator.createSvg("svg", {
+				attr: { width: "12", height: "12", viewBox: "0 0 12 12" }
+			  });
+			  svg.createSvg("circle", {
+				attr: {
+				  cx: "6",
+				  cy: "6",
+				  r: "5",
+				  fill: isActive ? 'var(--interactive-accent)' : 'none',
+				  stroke: "var(--interactive-accent)",
+				  "stroke-width": "1.5"
+				}
+			  });
+			
+			// 
+			item.addEventListener('click', () => {
+				void this.app.workspace.getLeaf().openFile(sat.file);
+			});
+		}
+	}
+}
